@@ -1,4 +1,5 @@
 # -*- coding: utf-8 -*-
+from plone.app.layout.globals.interfaces import IBodyClassAdapter
 from plone.app.layout.globals.interfaces import ILayoutPolicy
 from plone.app.layout.globals.interfaces import IViewView
 from plone.app.layout.icons.interfaces import IContentIcon
@@ -13,6 +14,8 @@ from Products.CMFPlone.interfaces.controlpanel import ISiteSchema
 from Products.Five.browser.metaconfigure import ViewMixinForTemplates
 from Products.Five.browser.pagetemplatefile import ViewPageTemplateFile
 from zope.browserpage.viewpagetemplatefile import ViewPageTemplateFile as ZopeViewPageTemplateFile  # noqa
+from zope.component import adapter
+from zope.component import getAdapters
 from zope.component import getMultiAdapter
 from zope.component import getUtility
 from zope.component import queryMultiAdapter
@@ -20,6 +23,7 @@ from zope.component import queryUtility
 from zope.deprecation import deprecate
 from zope.interface import alsoProvides
 from zope.interface import implementer
+from zope.interface import Interface
 from zope.publisher.browser import BrowserView
 
 import json
@@ -311,4 +315,29 @@ class LayoutPolicy(BrowserView):
         if msl or elonw:
             body_classes.append('pat-markspeciallinks')
 
+        # Add externally defined extra body classes
+        extra_classes = []
+        body_class_adapters = getAdapters(self.context, IBodyClassAdapter)
+        for adapter in body_class_adapters:
+            extra_classes_ = adapter.get_classes() or []
+            if isinstance(extra_classes_, basestring):
+                extra_classes_ = extra_classes_.split(' ')
+            extra_classes += extra_classes_
+
+        body_classes = set(body_classes + extra_classes)
+
         return ' '.join(sorted(body_classes))
+
+
+@adapter(Interface)
+@implementer(IBodyClassAdapter)
+class DefaultBodyClasses(object):
+
+    def __init__(self, context, request):
+        self.context = context
+        self.request = request
+
+    def get_classes(self):
+        """Default body classes adapter.
+        """
+        return []

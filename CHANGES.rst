@@ -10,7 +10,9 @@ Breaking changes:
 
 New features:
 
-- *add item here*
+- Allow addition of extra body classes via multiple ``IBodyClassAdapter`` adapter registrations without the need to overload the ILayoutPolicy view.
+  RFC / DRAFT / WORK IN PROGRESS
+  [thet]
 
 Bug fixes:
 
